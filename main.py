@@ -16,6 +16,18 @@ prediction_lock = threading.Lock()
 evaluation_lock = threading.Lock()
 
 def process_t2s_object(t2s_object, pipeline, args):
+    with prediction_lock:
+        if os.path.exists(args.prediction_json_path):
+            with open(args.prediction_json_path, 'r') as file_read:
+                existing_predictions = json.load(file_read)
+            # Check if the question is already processed
+            q_id = t2s_object["question_id"]
+            for prediction in existing_predictions:
+                if prediction["question_id"] == q_id:
+                    print(f"Question with {q_id} is already processed. Skipping this question.")
+                    return
+        else:
+            existing_predictions = []
     q_id = t2s_object["question_id"]
     if pipeline.pipeline_order == "CSG-SR":
         t2s_object_prediction = pipeline.forward_pipeline_CSG_SR(t2s_object)
