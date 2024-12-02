@@ -7,6 +7,59 @@ from pipeline.Pipeline import *
 from utils.db_utils import * 
 from utils.retrieval_utils import process_all_dbs
 from typing import Dict, Union, List, Tuple
+from concurrent.futures import ThreadPoolExecutor
+from tqdm import tqdm
+import threading
+
+# Initialize locks for file operations
+prediction_lock = threading.Lock()
+evaluation_lock = threading.Lock()
+
+def process_t2s_object(t2s_object, pipeline, args):
+    q_id = t2s_object["question_id"]
+    if pipeline.pipeline_order == "CSG-SR":
+        t2s_object_prediction = pipeline.forward_pipeline_CSG_SR(t2s_object)
+    elif pipeline.pipeline_order == "CSG-QE-SR":
+        t2s_object_prediction = pipeline.forward_pipeline_CSG_QE_SR(t2s_object)
+    elif pipeline.pipeline_order == "SF-CSG-QE-SR":
+        t2s_object_prediction = pipeline.forward_pipeline_SF_CSG_QE_SR(t2s_object)
+    else:
+        raise ValueError("Wrong value for pipeline_order argument. It must be either CSG-QE-SR or CSG-SR.")
+    
+    # Compare predicted and ground truth sqls
+    compare_results = check_correctness(t2s_object_prediction, args)
+    t2s_object_prediction['results'] = compare_results
+    
+    with prediction_lock:
+        if os.path.exists(args.prediction_json_path):
+            with open(args.prediction_json_path, 'r') as file_read:
+                existing_predictions = json.load(file_read)
+            existing_predictions.append(t2s_object_prediction)
+        else:
+            existing_predictions = [t2s_object_prediction]
+        with open(args.prediction_json_path, 'w') as file_write:
+            json.dump(existing_predictions, file_write, indent=4)
+    
+    # Adding predicted SQL in the expected format for the evaluation files
+    db_id = t2s_object_prediction["db_id"]
+    predicted_sql = t2s_object_prediction["predicted_sql"]
+    predicted_sql = predicted_sql.replace('\"','').replace('\\\n',' ').replace('\n',' ')
+    sql = predicted_sql + '\t----- bird -----\t' + db_id
+    output_dict = {str(q_id): sql}
+    
+    with evaluation_lock:
+        if os.path.exists(args.predictions_eval_json_path):
+            with open(args.predictions_eval_json_path, 'r') as f:
+                contents = json.load(f)
+        else:
+            contents = {}
+        contents.update(output_dict)
+        with open(args.predictions_eval_json_path, 'w') as f:
+            json.dump(contents, f, indent=4)
+    
+    print(f"Question with {q_id} is processed. Correctness: {compare_results['exec_res']} ")
+
+
 
 def main(args):
     load_dotenv() # load variables into os.environ
@@ -32,59 +85,10 @@ def main(args):
     # dataset = dataset[<enter_start_question_id>: <enter_end_question_id>]
     # dataset = dataset[<enter_question_id>:]
     dataset = dataset[1135:]
-    for ind,t2s_object in enumerate(dataset):
-        q_id = t2s_object["question_id"]
-        if pipeline.pipeline_order == "CSG-SR":
-            t2s_object_prediction = pipeline.forward_pipeline_CSG_SR(t2s_object)
-        elif pipeline.pipeline_order == "CSG-QE-SR":
-            t2s_object_prediction = pipeline.forward_pipeline_CSG_QE_SR(t2s_object)
-        elif pipeline.pipeline_order == "SF-CSG-QE-SR":
-            t2s_object_prediction = pipeline.forward_pipeline_SF_CSG_QE_SR(t2s_object)
-        else:
-            raise ValueError("Wrong value for pipeline_order argument. It must be either CSG-QE-SR or CSG-SR.")
-        
-        # Compare predicted and ground truth sqls
-        compare_results = check_correctness(t2s_object_prediction, args)
-        t2s_object_prediction['results'] = compare_results
-        if os.path.exists(args.prediction_json_path):
-            # get existing predictions
-            with open(args.prediction_json_path, 'r') as file_read:
-                existing_predictions = json.load(file_read)
-
-            # add new prediction to the existing predictions and then write to the file
-            existing_predictions.append(t2s_object_prediction)
-            with open(args.prediction_json_path, 'w') as file_write:
-                json.dump(existing_predictions, file_write, indent=4)
-
-        else:
-            file_write = open(args.prediction_json_path, 'w')
-            existing_predictions = [t2s_object_prediction]
-            json.dump(existing_predictions, file_write, indent=4)
-            file_write.close()
-
-        # # add the current text2sql object to the predictions
-        # predictions.append(t2s_object_prediction)
-        # # writing prediction to the predictions.json file
-        # with open(args.prediction_json_path, 'w') as f:
-        #     json.dump(predictions, f, indent=4)  # indent=4 for pretty printing
-
-        # adding predicted sql in the expected format for the evaluation files
-        db_id = t2s_object_prediction["db_id"]
-        predicted_sql = t2s_object_prediction["predicted_sql"]
-        predicted_sql = predicted_sql.replace('\"','').replace('\\\n',' ').replace('\n',' ')
-        sql = predicted_sql + '\t----- bird -----\t' + db_id
-        output_dict[str(q_id)] = sql
-        if os.path.exists(args.predictions_eval_json_path):
-            with open(args.predictions_eval_json_path, 'r') as f:
-                contents = json.loads(f.read())
-        else:
-            # Initialize contents as an empty dictionary if the file doesn't exist
-            contents = {}
-        contents.update(output_dict)
-        json.dump(contents, open(args.predictions_eval_json_path, 'w'), indent=4)
-        
-        print(f"Question with {q_id} is processed. Correctness: {compare_results['exec_res']} ")
-
+    thead_number = int(os.getenv('THREAD_NUMBER'))
+    # Use ThreadPoolExecutor with tqdm for progress bar
+    with ThreadPoolExecutor(max_workers=thead_number) as executor:
+        list(tqdm(executor.map(lambda obj: process_t2s_object(obj, pipeline, args), dataset), total=len(dataset)))
     # Calculatin Metrics
     predictions_json_file = open(args.prediction_json_path, 'r')
     predictions = json.load(predictions_json_file)

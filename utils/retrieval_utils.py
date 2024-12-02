@@ -10,6 +10,8 @@ from nltk.tokenize import word_tokenize
 from rank_bm25 import BM25Okapi
 from typing import List
 
+cachedStopWords = stopwords.words("english")
+
 
 def nltk_downloads():
     nltk.download('stopwords') # Download the stopwords
@@ -53,7 +55,7 @@ def clean_text(textData: str)-> str:
         textData = textData.translate(str.maketrans(string.punctuation, ' ' * len(string.punctuation))) # converts "don't" to "don t"
 
         # Removing stopwords
-        stopWordsSet = set(stopwords.words('english'))
+        stopWordsSet = set(cachedStopWords)
         tokens = word_tokenize(textData)
         tokens = [token for token in tokens if not token.lower() in stopWordsSet]
 
@@ -202,7 +204,7 @@ def get_db_column_meanings(database_column_meaning_path: str, db_id: str) -> Lis
         List[str]: A list of strings explaining the database column meanings.
     """
     # Load the JSON file
-    with open(database_column_meaning_path, 'r') as file:
+    with open(database_column_meaning_path, 'r',encoding='utf-8') as file:
         column_meanings = json.load(file)
     
     # Initialize a list to store the extracted meanings

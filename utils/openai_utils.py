@@ -1,5 +1,8 @@
 from openai import OpenAI
+import os
 from typing import Dict
+from dotenv import load_dotenv
+load_dotenv()
 
 def create_response(stage: str, prompt: str, model: str, max_tokens: int, temperature: float, top_p: float,  n: int) -> Dict:
     """
@@ -17,7 +20,10 @@ def create_response(stage: str, prompt: str, model: str, max_tokens: int, temper
     Returns:
         response_object (Dict): Object returned by the model
     """
-    client = OpenAI()
+    client = OpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("OPENAI_API_BASE")
+    )
 
     if stage == "question_enrichment":
         system_content = "You are excellent data scientist and can link the information between a question and corresponding database perfectly. Your objective is to analyze the given question, corresponding database schema, database column descriptions and the evidence to create a clear link between the given question and database items which includes tables, columns and values. With the help of link, rewrite new versions of the original question to be more related with database items, understandable, clear, absent of irrelevant information and easier to translate into SQL queries. This question enrichment is essential for comprehending the question's intent and identifying the related database items. The process involves pinpointing the relevant database components and expanding the question to incorporate these items."
@@ -57,8 +63,10 @@ def upload_file_to_openai(file_path: str) -> Dict:
     Returns:
         file_object (FileObject): Returned file object by openai
     """
-    client = OpenAI()
-
+    client = OpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("OPENAI_API_BASE")
+    )
     file_object = client.files.create(
         file=open(file_path, "rb"),
         purpose="batch"
