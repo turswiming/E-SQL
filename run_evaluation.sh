@@ -6,7 +6,7 @@ predicted_sql_path='./results/model_outputs_dev_SF-CSG-QE-SR_gpt-4o-mini-2024-07
 
 ground_truth_path='../dataset/bird-sql/dev/'
 num_cpus=24
-meta_time_out=60.0
+meta_time_out=6000.0
 mode_gt='gt'
 mode_predict='gpt'
 

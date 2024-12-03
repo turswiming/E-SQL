@@ -137,7 +137,7 @@ def execute_model(
 
 
 def run_sqls_parallel(
-    sqls, db_places, num_cpus=1, meta_time_out=30.0, sql_dialect="SQLite"
+    sqls, db_places, num_cpus=1, meta_time_out=300.0, sql_dialect="SQLite"
 ):
     pool = mp.Pool(processes=num_cpus)
     for i, sql_pair in enumerate(sqls):
@@ -149,7 +149,7 @@ def run_sqls_parallel(
                 predicted_sql,
                 ground_truth,
                 db_places[i],
-                i,
+                i+1135,
                 meta_time_out,
                 sql_dialect,
             ),
@@ -158,24 +158,36 @@ def run_sqls_parallel(
     pool.close()
     pool.join()
 
+def find_res_of_matched_index(exec_results, content)->int:
+    content_index = content["question_id"]
+    for i, res in enumerate(exec_results):
+        if res["sql_idx"] == content_index:
+            return res
+    raise ValueError(f"Index {content_index} not found in the results.")
 
 def compute_f1_by_diff(exec_results, diff_json_path):
     num_queries = len(exec_results)
     results = [res["res"] for res in exec_results]
     contents = load_json(diff_json_path)
-    content = contents[1135:]
+    contents = contents[1135:]
     simple_results, moderate_results, challenging_results = [], [], []
 
     for i, content in enumerate(contents):
         if content["difficulty"] == "simple":
-            simple_results.append(exec_results[i])
+            try:
+                simple_results.append(find_res_of_matched_index(exec_results,content))
+            except:
+                print(i)
 
-        if content["difficulty"] == "moderate":
-            moderate_results.append(exec_results[i])
+        if content["difficulty"] == "moderate":            
+            try:
+                moderate_results.append(find_res_of_matched_index(exec_results,content))
+            except:
+                print(i)
 
         if content["difficulty"] == "challenging":
             try:
-                challenging_results.append(exec_results[i])
+                challenging_results.append(find_res_of_matched_index(exec_results,content))
             except:
                 print(i)
 
@@ -227,7 +239,7 @@ if __name__ == "__main__":
     args = args_parser.parse_args()
     exec_result = []
 
-    pred_queries, db_paths = package_sqls(
+    pred_queries, db_paths, index_pred = package_sqls(
         args.predicted_sql_path,
         args.db_root_path,
         args.engine,
@@ -236,7 +248,7 @@ if __name__ == "__main__":
         data_mode=args.data_mode,
     )
     # generate ground truth sqls:
-    gt_queries, db_paths_gt = package_sqls(
+    gt_queries, db_paths_gt, index_gt = package_sqls(
         args.ground_truth_path,
         args.db_root_path,
         args.engine,
@@ -245,11 +257,29 @@ if __name__ == "__main__":
         data_mode=args.data_mode,
     )
 
-    query_pairs = list(zip(pred_queries, gt_queries))
+    gt_queries = gt_queries[1135:]
+    db_paths_gt = db_paths_gt[1135:]
+    index_gt = index_gt[1135:]
 
+    query_pairs = []
+    db_paths_new = []
+    index_of_pred = 0
+    print(len(gt_queries))
+    print(len(pred_queries))
+    print(index_pred)
+    for idx in range((len(gt_queries))):
+        if str(idx+1135) in index_pred:
+            query_pairs.append((pred_queries[index_of_pred], gt_queries[idx]))
+            db_paths_new.append(db_paths[index_of_pred])
+            index_of_pred += 1
+        else:
+            db_paths_new.append("")
+            query_pairs.append(("", gt_queries[idx]))
+    print(query_pairs[:5])
+    print(db_paths_new[:5])
     run_sqls_parallel(
         query_pairs,
-        db_places=db_paths,
+        db_places=db_paths_new,
         num_cpus=args.num_cpus,
         meta_time_out=args.meta_time_out,
         sql_dialect=args.sql_dialect,
@@ -284,5 +314,6 @@ if __name__ == "__main__":
 
     print("Soft F1 score is written into the soft_f1_score.txt file.")
 
-    
+
+
 

@@ -87,7 +87,9 @@ def package_sqls(
                 "r",
             )
         )
-        for _, sql_str in sql_data.items():
+        indexs = []
+        for i, sql_str in sql_data.items():
+            indexs.append(i)
             if type(sql_str) == str:
                 sql, db_name = sql_str.split("\t----- bird -----\t")
             else:
@@ -98,14 +100,16 @@ def package_sqls(
     elif mode == "gt":
         sqls = open(sql_path + data_mode + "_" + sql_dialect + "_gold.sql")
         sql_txt = sqls.readlines()
+        indexs = []
         # sql_txt = [sql.split('\t')[0] for sql in sql_txt]
         for idx, sql_str in enumerate(sql_txt):
             # print(sql_str)
             sql, db_name = sql_str.strip().split("\t")
+            indexs.append(idx)
             clean_sqls.append(sql)
             db_path_list.append(db_root_path + db_name + "/" + db_name + ".sqlite")
 
-    return clean_sqls, db_path_list
+    return clean_sqls, db_path_list,indexs
 
 
 def sort_results(list_of_dicts):
