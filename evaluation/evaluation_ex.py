@@ -65,6 +65,12 @@ def run_sqls_parallel(
         )
     pool.close()
     pool.join()
+def find_res_of_matched_index(exec_results, content)->int:
+    content_index = content["question_id"]
+    for i, res in enumerate(exec_results):
+        if res["sql_idx"] == content_index:
+            return res
+    raise ValueError(f"Index {content_index} not found in the results.")
 
 
 def compute_acc_by_diff(exec_results, diff_json_path):
@@ -75,16 +81,22 @@ def compute_acc_by_diff(exec_results, diff_json_path):
 
     for i, content in enumerate(contents):
         if content["difficulty"] == "simple":
-            simple_results.append(exec_results[i])
+            try:
+                simple_results.append(find_res_of_matched_index(exec_results,content))
+            except:
+                pass
 
-        if content["difficulty"] == "moderate":
-            moderate_results.append(exec_results[i])
+        if content["difficulty"] == "moderate":            
+            try:
+                moderate_results.append(find_res_of_matched_index(exec_results,content))
+            except:
+                pass
 
         if content["difficulty"] == "challenging":
             try:
-                challenging_results.append(exec_results[i])
+                challenging_results.append(find_res_of_matched_index(exec_results,content))
             except:
-                print(i)
+                pass
 
     simple_acc = sum([res["res"] for res in simple_results]) / len(simple_results)
     moderate_acc = sum([res["res"] for res in moderate_results]) / len(moderate_results)
@@ -130,7 +142,7 @@ if __name__ == "__main__":
     args = args_parser.parse_args()
     exec_result = []
 
-    pred_queries, db_paths = package_sqls(
+    pred_queries, db_paths, index_pred = package_sqls(
         args.predicted_sql_path,
         args.db_root_path,
         args.engine,
@@ -139,7 +151,7 @@ if __name__ == "__main__":
         data_mode=args.data_mode,
     )
     # generate ground truth sqls:
-    gt_queries, db_paths_gt = package_sqls(
+    gt_queries, db_paths_gt, index_gt = package_sqls(
         args.ground_truth_path,
         args.db_root_path,
         args.engine,
@@ -148,11 +160,25 @@ if __name__ == "__main__":
         data_mode=args.data_mode,
     )
 
-    query_pairs = list(zip(pred_queries, gt_queries))
+    gt_queries = gt_queries[1135:]
+    db_paths_gt = db_paths_gt[1135:]
+    index_gt = index_gt[1135:]
+
+    query_pairs = []
+    db_paths_new = []
+    index_of_pred = 0
+    for idx in range(len(gt_queries)):
+        if str(idx + 1135) in index_pred:
+            query_pairs.append((pred_queries[index_of_pred], gt_queries[idx]))
+            db_paths_new.append(db_paths[index_of_pred])
+            index_of_pred += 1
+        else:
+            db_paths_new.append("")
+            query_pairs.append(("", gt_queries[idx]))
 
     run_sqls_parallel(
         query_pairs,
-        db_places=db_paths,
+        db_places=db_paths_new,
         num_cpus=args.num_cpus,
         meta_time_out=args.meta_time_out,
         sql_dialect=args.sql_dialect,

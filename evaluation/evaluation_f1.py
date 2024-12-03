@@ -264,9 +264,7 @@ if __name__ == "__main__":
     query_pairs = []
     db_paths_new = []
     index_of_pred = 0
-    print(len(gt_queries))
-    print(len(pred_queries))
-    print(index_pred)
+
     for idx in range((len(gt_queries))):
         if str(idx+1135) in index_pred:
             query_pairs.append((pred_queries[index_of_pred], gt_queries[idx]))
@@ -275,8 +273,7 @@ if __name__ == "__main__":
         else:
             db_paths_new.append("")
             query_pairs.append(("", gt_queries[idx]))
-    print(query_pairs[:5])
-    print(db_paths_new[:5])
+
     run_sqls_parallel(
         query_pairs,
         db_places=db_paths_new,
