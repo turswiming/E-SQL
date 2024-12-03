@@ -5,7 +5,7 @@ import sqlite3
 
 
 def load_json(dir):
-    with open(dir, "r") as j:
+    with open(dir, "r",encoding='utf-8') as j:
         contents = json.loads(j.read())
     return contents
 
