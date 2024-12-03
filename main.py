@@ -7,7 +7,7 @@ from pipeline.Pipeline import *
 from utils.db_utils import * 
 from utils.retrieval_utils import process_all_dbs
 from typing import Dict, Union, List, Tuple
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 import threading
 
@@ -86,7 +86,7 @@ def main(args):
     
     # load dataset
     dataset_json_path = bird_sql_path + f"/{args.mode}/{args.mode}.json"
-    f = open(dataset_json_path)
+    f = open(dataset_json_path,encoding='utf-8')
     dataset = json.load(f)
 
     pipeline = Pipeline(args)
@@ -100,8 +100,14 @@ def main(args):
     thead_number = int(os.getenv('THREAD_NUMBER'))
     # Use ThreadPoolExecutor with tqdm for progress bar
     with ThreadPoolExecutor(max_workers=thead_number) as executor:
-        list(tqdm(executor.map(lambda obj: process_t2s_object(obj, pipeline, args), dataset), total=len(dataset)))
+        futures = []
+        for obj in dataset:
+            futures.append(executor.submit(process_t2s_object, obj, pipeline, args))
+            time.sleep(0.1)  # Add a 200ms delay between starting each thread
 
+        results = []
+        for future in tqdm(as_completed(futures), total=len(futures)):
+            results.append(future.result())
     #sort the predictions according to question_id
     with open(args.prediction_json_path, 'r') as file_read:
         predictions = json.load(file_read)
