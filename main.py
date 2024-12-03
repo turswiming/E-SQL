@@ -106,8 +106,10 @@ def main(args):
             time.sleep(0.1)  # Add a 200ms delay between starting each thread
 
         results = []
-        for future in tqdm(as_completed(futures), total=len(futures)):
-            results.append(future.result())
+        with tqdm(total=len(futures)) as pbar:
+            for future in as_completed(futures):
+                results.append(future.result())
+                pbar.update(1) 
     #sort the predictions according to question_id
     with open(args.prediction_json_path, 'r') as file_read:
         predictions = json.load(file_read)
