@@ -163,6 +163,7 @@ def compute_f1_by_diff(exec_results, diff_json_path):
     num_queries = len(exec_results)
     results = [res["res"] for res in exec_results]
     contents = load_json(diff_json_path)
+    content = contents[1135:]
     simple_results, moderate_results, challenging_results = [], [], []
 
     for i, content in enumerate(contents):

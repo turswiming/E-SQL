@@ -101,6 +101,22 @@ def main(args):
     # Use ThreadPoolExecutor with tqdm for progress bar
     with ThreadPoolExecutor(max_workers=thead_number) as executor:
         list(tqdm(executor.map(lambda obj: process_t2s_object(obj, pipeline, args), dataset), total=len(dataset)))
+
+    #sort the predictions according to question_id
+    with open(args.prediction_json_path, 'r') as file_read:
+        predictions = json.load(file_read)
+    predictions = sorted(predictions, key=lambda x: x['question_id'])
+    with open(args.prediction_json_path, 'w') as file_write:
+        json.dump(predictions, file_write, indent=4)
+
+    #sort the predictions for evaluation according to question_id
+    with open(args.predictions_eval_json_path, 'r') as f:
+        contents = json.load(f)
+    contents = dict(sorted(contents.items(), key=lambda item: int(item[0])))
+    with open(args.predictions_eval_json_path, 'w') as f:
+        json.dump(contents, f, indent=4)
+        
+
     # Calculatin Metrics
     predictions_json_file = open(args.prediction_json_path, 'r')
     predictions = json.load(predictions_json_file)

@@ -5,7 +5,7 @@ diff_json_path='../dataset/bird-sql/dev/dev.json' # _sqlite.json, _mysql.json, _
 predicted_sql_path='./results/model_outputs_dev_SF-CSG-QE-SR_gpt-4o-mini-2024-07-18/'
 
 ground_truth_path='../dataset/bird-sql/dev/'
-num_cpus=72
+num_cpus=24
 meta_time_out=60.0
 mode_gt='gt'
 mode_predict='gpt'
@@ -20,18 +20,18 @@ engine='gpt-4o'
 sql_dialect='SQLite'
 
 echo "starting to compare with knowledge for soft-f1 engine: ${engine} sql_dialect: ${sql_dialect} meta_time_out: ${meta_time_out}"
-python3 -u ./evaluation/evaluation_f1.py --db_root_path ${db_root_path} --predicted_sql_path ${predicted_sql_path} --data_mode ${data_mode} \
+python -u ./evaluation/evaluation_f1.py --db_root_path ${db_root_path} --predicted_sql_path ${predicted_sql_path} --data_mode ${data_mode} \
 --ground_truth_path ${ground_truth_path} --num_cpus ${num_cpus} --mode_gt ${mode_gt} --mode_predict ${mode_predict} \
 --diff_json_path ${diff_json_path} --meta_time_out ${meta_time_out}  --engine ${engine} --sql_dialect ${sql_dialect}
 
 echo "starting to compare with knowledge for ex engine: ${engine} sql_dialect: ${sql_dialect} meta_time_out: ${meta_time_out}"
-python3 -u ./evaluation/evaluation_ex.py --db_root_path ${db_root_path} --predicted_sql_path ${predicted_sql_path} --data_mode ${data_mode} \
+python -u ./evaluation/evaluation_ex.py --db_root_path ${db_root_path} --predicted_sql_path ${predicted_sql_path} --data_mode ${data_mode} \
 --ground_truth_path ${ground_truth_path} --num_cpus ${num_cpus} --mode_gt ${mode_gt} --mode_predict ${mode_predict} \
 --diff_json_path ${diff_json_path} --meta_time_out ${meta_time_out} --engine ${engine} --sql_dialect ${sql_dialect}
 
 
 echo "starting to compare with knowledge for ves engine: ${engine} sql_dialect: ${sql_dialect} meta_time_out: ${meta_time_out}"
-python3 -u ./evaluation/evaluation_ves.py --db_root_path ${db_root_path} --predicted_sql_path ${predicted_sql_path} --data_mode ${data_mode} \
+python -u ./evaluation/evaluation_ves.py --db_root_path ${db_root_path} --predicted_sql_path ${predicted_sql_path} --data_mode ${data_mode} \
 --ground_truth_path ${ground_truth_path} --num_cpus ${num_cpus} --mode_gt ${mode_gt} --mode_predict ${mode_predict} \
 --diff_json_path ${diff_json_path} --meta_time_out ${meta_time_out}  --engine ${engine} --sql_dialect ${sql_dialect}
 
