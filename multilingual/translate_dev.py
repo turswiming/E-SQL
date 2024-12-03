@@ -13,8 +13,13 @@ load_dotenv()
 language = "Contonese"  # Change this to the target language you want to translate to
 max_workers = 50  # Number of concurrent threads to use for translation
 # Paths to your datasets
-path_to_dev = os.path.join('.', 'dataset', 'bird-sql', 'dev', 'dev.json')
-path_to_save = os.path.join('.', 'dataset', 'bird-sql', 'dev', 'dev_{}.json')
+path_to_dev = os.path.join('..','..', 'dataset', 'bird-sql', 'dev', 'dev.json')
+path_to_save = os.path.join('..','..', 'dataset', 'bird-sql', 'dev', 'dev_{}.json')
+
+def get_abs_path_from_rel(rel_path):
+    return os.path.join(os.path.dirname(__file__), rel_path)
+path_to_dev = get_abs_path_from_rel(path_to_dev)
+path_to_save = get_abs_path_from_rel(path_to_save)
 
 def translate_to_english(data):
     question = data['question']
