@@ -3,8 +3,8 @@
 # Set default values for the arguments
 mode="dev"
 model="gpt-4o-mini-2024-07-18"  # For GPT-4o use "gpt-4o-2024-08-06". For GPT-4o mini use "gpt-4o-mini-2024-07-18"
-schema_language="English"
-query_language="English"
+schema_language="English" #English/Chinese/Contonese/Japanese
+query_language="Chinese" #English/Chinese/Contonese/Japanese
 pipeline_order="SF-CSG-QE-SR" # First set CSG-QE-SR and then set CSG-SR
 
 # DO NOT CHANGE THE F0LLOWING ARGUMENTS
