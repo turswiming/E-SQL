@@ -16,6 +16,8 @@ class Pipeline():
 
         # Model attributes
         self.model = args.model
+        self.schema_language = args.schema_language
+        self.query_language = args.query_language
         self.temperature = args.temperature
         self.top_p = args.top_p
         self.max_tokens = args.max_tokens
@@ -70,7 +72,10 @@ class Pipeline():
         db_path = bird_sql_path + f"/{self.mode}/{self.mode}_databases/{db_id}/{db_id}.sqlite"
         db_description_path = bird_sql_path + f"/{self.mode}/{self.mode}_databases/{db_id}/database_description"
         db_descriptions = question_relevant_descriptions_prep(database_description_path=db_description_path, question=question, relevant_description_number=self.rdn)
-        database_column_meaning_path = bird_sql_path + f"/{self.mode}/column_meaning.json"
+        if self.schema_language == "English":
+            database_column_meaning_path = bird_sql_path + f"/{self.mode}/column_meaning.json"
+        else:
+            database_column_meaning_path = bird_sql_path + f"/{self.mode}/column_meaning_{self.schema_language}.json"
         db_column_meanings = db_column_meaning_prep(database_column_meaning_path, db_id)
         db_descriptions = db_descriptions + "\n\n" + db_column_meanings
 
@@ -171,7 +176,10 @@ class Pipeline():
         db_path = bird_sql_path + f"/{self.mode}/{self.mode}_databases/{db_id}/{db_id}.sqlite"
         db_description_path = bird_sql_path + f"/{self.mode}/{self.mode}_databases/{db_id}/database_description"
         db_descriptions = question_relevant_descriptions_prep(database_description_path=db_description_path, question=question, relevant_description_number=self.rdn)
-        database_column_meaning_path = bird_sql_path + f"/{self.mode}/column_meaning.json"
+        if self.schema_language == "English":
+            database_column_meaning_path = bird_sql_path + f"/{self.mode}/column_meaning.json"
+        else:
+            database_column_meaning_path = bird_sql_path + f"/{self.mode}/column_meaning_{self.schema_language}.json"
         db_column_meanings = db_column_meaning_prep(database_column_meaning_path, db_id)
         db_descriptions = db_descriptions + "\n\n" + db_column_meanings
 
@@ -303,7 +311,10 @@ class Pipeline():
         db_path = bird_sql_path + f"/{self.mode}/{self.mode}_databases/{db_id}/{db_id}.sqlite"
         db_description_path = bird_sql_path + f"/{self.mode}/{self.mode}_databases/{db_id}/database_description"
         db_descriptions = question_relevant_descriptions_prep(database_description_path=db_description_path, question=question, relevant_description_number=self.rdn)
-        database_column_meaning_path = bird_sql_path + f"/{self.mode}/column_meaning.json"
+        if self.schema_language == "English":
+            database_column_meaning_path = bird_sql_path + f"/{self.mode}/column_meaning.json"
+        else:
+            database_column_meaning_path = bird_sql_path + f"/{self.mode}/column_meaning_{self.schema_language}.json"
         db_column_meanings = db_column_meaning_prep(database_column_meaning_path, db_id)
         db_descriptions = db_descriptions + "\n\n" + db_column_meanings
 

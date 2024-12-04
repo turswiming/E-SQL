@@ -3,6 +3,8 @@
 # Set default values for the arguments
 mode="dev"
 model="gpt-4o-mini-2024-07-18"  # For GPT-4o use "gpt-4o-2024-08-06". For GPT-4o mini use "gpt-4o-mini-2024-07-18"
+schema_language="English"
+query_language="English"
 pipeline_order="SF-CSG-QE-SR" # First set CSG-QE-SR and then set CSG-SR
 
 # DO NOT CHANGE THE F0LLOWING ARGUMENTS
@@ -27,6 +29,8 @@ while [ "$#" -gt 0 ]; do
     case $1 in
         --mode) mode="$2"; shift ;;
         --model) model="$2"; shift ;;
+        --schema_language) schema_language="$2"; shift ;;
+        --query_language) query_language="$2"; shift ;;
         --temperature) temperature="$2"; shift ;;
         --top_p) top_p="$2"; shift ;;
         --max_tokens) max_tokens="$2"; shift ;;
@@ -52,6 +56,8 @@ done
 python main.py \
     --mode "$mode" \
     --model "$model" \
+    --schema_language "$schema_language" \
+    --query_language "$query_language" \
     --temperature "$temperature" \
     --top_p "$top_p" \
     --max_tokens "$max_tokens" \

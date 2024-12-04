@@ -2,7 +2,7 @@ db_root_path='../dataset/bird-sql/dev/dev_databases/'
 data_mode='dev' # dev, train, mini_dev
 diff_json_path='../dataset/bird-sql/dev/dev.json' # _sqlite.json, _mysql.json, _postgresql.json
 # Path where the predicted SQL queries are stored
-predicted_sql_path='./results/model_outputs_dev_SF-CSG-QE-SR_gpt-4o-mini-2024-07-18/'
+predicted_sql_path='./results/model_outputs_dev_SF-CSG-QE-SR_gpt-4o-mini-2024-07-18_English_English/'
 
 ground_truth_path='../dataset/bird-sql/dev/'
 num_cpus=24

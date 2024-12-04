@@ -85,7 +85,10 @@ def main(args):
     random.seed(args.seed)
     
     # load dataset
-    dataset_json_path = bird_sql_path + f"/{args.mode}/{args.mode}.json"
+    if args.query_language == "English":
+        dataset_json_path = bird_sql_path + f"/{args.mode}/{args.mode}.json"
+    else:
+        dataset_json_path = bird_sql_path + f"/{args.mode}/{args.mode}_{args.query_language}.json"
     f = open(dataset_json_path,encoding='utf-8')
     dataset = json.load(f)
 
@@ -266,7 +269,7 @@ def create_result_files(args):
     if not os.path.exists("./results"):
         os.makedirs("./results")
 
-    args.output_directory_path = f"./results/model_outputs_{args.mode}_{args.pipeline_order}_{args.model}"
+    args.output_directory_path = f"./results/model_outputs_{args.mode}_{args.pipeline_order}_{args.model}_{args.schema_language}_{args.query_language}"
 
     # Ensure the directory exists
     if not os.path.exists(args.output_directory_path):
@@ -314,6 +317,8 @@ if __name__ == '__main__':
 
     # Model Arguments
     parser.add_argument("--model", default="gpt-4o-mini-2024-07-18", type=str, help="OpenAI models.")
+    parser.add_argument("--schema_language", default="English", type=str, help="The language of the schema. English/Chinese/Contonese/Japanese.")
+    parser.add_argument("--query_language", default="English", type=str, help="The language of the query. English/Chinese/Contonese/Japanese.")
     parser.add_argument("--temperature", default=0.0, type=float, help="Sampling temperature between 0 to 2. It is recommended altering this or top_p but not both.")
     parser.add_argument("--top_p", default=1, type=float, help="Nucleus sampling. It is recommend altering this or temperature but not both")
     parser.add_argument("--max_tokens", default=2048, type=int, help="The maximum number of tokens that can be generated.")
