@@ -1,9 +1,10 @@
 from openai import OpenAI
+from dashscope import Generation
 import os
 from typing import Dict
 from dotenv import load_dotenv
 load_dotenv()
-
+dashscope_models = ["chatglm-6b-v2","chatglm3-6b"]
 def create_response(stage: str, prompt: str, model: str, max_tokens: int, temperature: float, top_p: float,  n: int) -> Dict:
     """
     The functions creates chat response by using chat completion
@@ -20,11 +21,6 @@ def create_response(stage: str, prompt: str, model: str, max_tokens: int, temper
     Returns:
         response_object (Dict): Object returned by the model
     """
-    client = OpenAI(
-        api_key=os.getenv("OPENAI_API_KEY"),
-        base_url=os.getenv("OPENAI_API_BASE")
-    )
-
     if stage == "question_enrichment":
         system_content = "You are excellent data scientist and can link the information between a question and corresponding database perfectly. Your objective is to analyze the given question, corresponding database schema, database column descriptions and the evidence to create a clear link between the given question and database items which includes tables, columns and values. With the help of link, rewrite new versions of the original question to be more related with database items, understandable, clear, absent of irrelevant information and easier to translate into SQL queries. This question enrichment is essential for comprehending the question's intent and identifying the related database items. The process involves pinpointing the relevant database components and expanding the question to incorporate these items."
     elif stage == "candidate_sql_generation":
@@ -36,20 +32,39 @@ def create_response(stage: str, prompt: str, model: str, max_tokens: int, temper
     else:
         raise ValueError("Wrong value for stage. It can only take following values: question_enrichment, candidate_sql_generation, sql_refinement or schema_filtering.")
 
-    response_object = client.chat.completions.create(
-        model = model,
-        messages=[
-            {"role": "system", "content": system_content},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens = max_tokens,
-        response_format = { "type": "json_object" },
-        temperature = temperature,
-        top_p = top_p,
-        n=n,
-        presence_penalty = 0.0,
-        frequency_penalty = 0.0
-    )
+    if model in dashscope_models:
+        gen = Generation()
+
+        messages = [
+            {'role': 'system', 'content': system_content},
+            {'role': 'user', 'content': prompt}
+        ]
+        response_object = gen.call(
+            model,
+            messages=messages,
+            result_format='message',
+        )
+    else:
+        client = OpenAI(
+            api_key=os.getenv("OPENAI_API_KEY"),
+            base_url=os.getenv("OPENAI_API_BASE")
+        )
+
+
+        response_object = client.chat.completions.create(
+            model = model,
+            messages=[
+                {"role": "system", "content": system_content},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens = max_tokens,
+            response_format = { "type": "json_object" },
+            temperature = temperature,
+            top_p = top_p,
+            n=n,
+            presence_penalty = 0.0,
+            frequency_penalty = 0.0
+        )
 
     return response_object
 
