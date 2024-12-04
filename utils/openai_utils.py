@@ -1,5 +1,4 @@
 from openai import OpenAI
-from dashscope import Generation
 import os
 from typing import Dict
 from dotenv import load_dotenv
@@ -32,39 +31,28 @@ def create_response(stage: str, prompt: str, model: str, max_tokens: int, temper
     else:
         raise ValueError("Wrong value for stage. It can only take following values: question_enrichment, candidate_sql_generation, sql_refinement or schema_filtering.")
 
-    if model in dashscope_models:
-        gen = Generation()
+    
 
-        messages = [
-            {'role': 'system', 'content': system_content},
-            {'role': 'user', 'content': prompt}
-        ]
-        response_object = gen.call(
-            model,
-            messages=messages,
-            result_format='message',
-        )
-    else:
-        client = OpenAI(
-            api_key=os.getenv("OPENAI_API_KEY"),
-            base_url=os.getenv("OPENAI_API_BASE")
-        )
+    client = OpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("OPENAI_API_BASE")
+    )
 
 
-        response_object = client.chat.completions.create(
-            model = model,
-            messages=[
-                {"role": "system", "content": system_content},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens = max_tokens,
-            response_format = { "type": "json_object" },
-            temperature = temperature,
-            top_p = top_p,
-            n=n,
-            presence_penalty = 0.0,
-            frequency_penalty = 0.0
-        )
+    response_object = client.chat.completions.create(
+        model = model,
+        messages=[
+            {"role": "system", "content": system_content},
+            {"role": "user", "content": prompt}
+        ],
+        max_tokens = max_tokens,
+        response_format = { "type": "json_object" },
+        temperature = temperature,
+        top_p = top_p,
+        n=n,
+        presence_penalty = 0.0,
+        frequency_penalty = 0.0
+    )
 
     return response_object
 
